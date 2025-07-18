@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useRef, useEffect, useState } from 'react';
-import { motion, useTransform, useSpring } from 'framer-motion';
+import { motion, useSpring } from 'framer-motion';
 
 export default function HomePage() {
   const unifyRef = useRef<HTMLDivElement>(null);
