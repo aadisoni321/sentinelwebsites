@@ -1,270 +1,313 @@
-'use client';
+"use client";
 
-export default function Home() {
+import React from 'react';
+import Link from 'next/link';
+import { useRef, useEffect, useState } from 'react';
+import { motion, useTransform, useSpring } from 'framer-motion';
+
+export default function HomePage() {
+  const unifyRef = useRef<HTMLDivElement>(null);
+  const [progress, setProgress] = useState(0); // 0 = start, 1 = fully stacked
+
+  // Custom scroll progress: 0 when section fully in view, 1 when bottom hits bottom
+  useEffect(() => {
+    function handleScroll() {
+      if (!unifyRef.current) return;
+      const rect = unifyRef.current.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      // Section fully in view: top >= 0 && bottom <= windowHeight
+      if (rect.top >= 0 && rect.bottom <= windowHeight) {
+        setProgress(0);
+      } else if (rect.top < 0 && rect.bottom > windowHeight) {
+        // Section is taller than viewport, user is scrolling through
+        const total = rect.height - windowHeight;
+        const scrolled = -rect.top;
+        setProgress(Math.min(Math.max(scrolled / total, 0), 1));
+      } else if (rect.top < 0 && rect.bottom <= windowHeight) {
+        // Scrolled past the section
+        setProgress(1);
+      } else {
+        setProgress(0);
+      }
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Animate headline font size: large -> small, no opacity
+  const headlineFontSize = useSpring(progress === 0 ? 12 : 4, { stiffness: 120, damping: 20 });
+
+  // Card initial and final positions (X, Y)
+  const cardInitial = [
+    [-30, -10], // Smart (1)
+    [30, -10],  // Smart (2)
+    [-20, 10],  // Smart (3)
+    [20, 10],   // Smart (4)
+    [15, -20],  // Smart.png
+  ];
+  // All cards stack at (0,0) in the center
+  const cardFinal = [ [0,0], [0,0], [0,0], [0,0], [0,0] ];
+
+  const CARD_COUNT = 5;
+  // Interpolate X and Y for each card
+  const getCardStyle = (i: number) => {
+    const safeInit = (cardInitial && Array.isArray(cardInitial[i]) && typeof cardInitial[i][0] === 'number' && typeof cardInitial[i][1] === 'number') ? cardInitial[i] : [0, 0];
+    const safeFin = (cardFinal && Array.isArray(cardFinal[i]) && typeof cardFinal[i][0] === 'number' && typeof cardFinal[i][1] === 'number') ? cardFinal[i] : [0, 0];
+    const x = safeInit[0] + (safeFin[0] - safeInit[0]) * progress;
+    const y = safeInit[1] + (safeFin[1] - safeInit[1]) * progress;
+    return {
+      x: `${x}vw`,
+      y: `${y}vh`,
+    };
+  };
+
   return (
-    <div className="min-h-screen bg-black text-white">
-      {/* Navigation Bar */}
-      <nav className="flex items-center justify-between px-8 py-6">
-        <div className="text-2xl font-bold tracking-wide">
-          SENTINEL
+    <div className="min-h-screen bg-black text-white" style={{ fontFamily: 'Gabriel Sans, sans-serif' }}>
+      {/* NAVIGATION BAR */}
+      <nav className="w-full flex items-center justify-between px-12 py-6 bg-black" style={{ fontFamily: 'Gabriel Sans, sans-serif' }}>
+        <div className="text-lg font-semibold tracking-wide">SENTINEL</div>
+        <div className="flex-1 flex justify-center space-x-16">
+          <a href="/product" className="text-base font-normal text-gray-300 hover:text-white transition">Product</a>
+          <a href="/security" className="text-base font-normal text-gray-300 hover:text-white transition">Security</a>
+          <a href="/pricing" className="text-base font-normal text-gray-300 hover:text-white transition">Pricing</a>
         </div>
-        
-        <div className="hidden md:flex items-center space-x-8">
-          <a href="#" className="text-gray-300 hover:text-white transition-colors font-medium">
-            Product
-          </a>
-          <a href="#" className="text-gray-300 hover:text-white transition-colors font-medium">
-            Security
-          </a>
-          <a href="#" className="text-gray-300 hover:text-white transition-colors font-medium">
-            Pricing
-          </a>
-        </div>
-        
-        <button className="btn-primary">
-          Get Started
-        </button>
+        <Link href="/login">
+          <button className="px-5 py-2 bg-white text-black font-semibold rounded border border-blue-500 hover:bg-blue-50 transition text-base" style={{ boxShadow: '0 0 0 2px #2563eb' }}>
+            Get Started
+          </button>
+        </Link>
       </nav>
 
-      {/* Hero Section */}
-      <section className="text-center py-20 px-8">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-6xl md:text-7xl font-bold mb-6 leading-tight">
-            They Hope You Forget.
-          </h1>
-          <h2 className="text-6xl md:text-7xl font-bold mb-12 text-blue-500">
-            We Make Sure You Don't.
-          </h2>
-          
-          <p className="text-xl md:text-2xl mb-4 text-gray-300">
-            The Subscription Manager That
-          </p>
-          <p className="text-xl md:text-2xl mb-16 text-gray-300">
-            Makes Your Wallet Smile.
-          </p>
-          
-          <button className="btn-primary text-xl px-10 py-4">
-            Start Free Trial
+      {/* HERO SECTION */}
+      <section className="text-center pt-20 pb-12 px-4 bg-black">
+        <h1 className="text-5xl md:text-7xl font-bold mb-4 leading-tight" style={{ fontFamily: 'Gabriel Sans, sans-serif' }}>
+          They Hope You Forget.<br />
+          <span className="text-blue-500">We Make Sure You Don’t.</span>
+        </h1>
+        <p className="text-lg md:text-xl font-medium mb-8 mt-6 text-white" style={{ fontFamily: 'Gabriel Sans, sans-serif' }}>
+          The Subscription Manager That<br />Makes You Wallet Smile.
+        </p>
+        <button className="mx-auto text-base px-6 py-2 rounded border border-blue-500 text-black bg-white font-semibold shadow-sm hover:bg-blue-50 transition" style={{ boxShadow: '0 0 0 2px #2563eb' }}>
+          Start Free Trial
+        </button>
+      </section>
+
+      {/* OCEAN IMAGE SECTION */}
+      <section className="flex justify-center items-center py-12 bg-black">
+        <div className="w-[160vw] max-w-[2000px] aspect-[2/1] bg-black rounded-none overflow-hidden">
+          <img src="/images/StudentStack - HAC (1).png" alt="Ocean" className="w-full h-full object-cover" />
+        </div>
+      </section>
+
+      {/* DASHBOARD / BLUE CARDS SECTION */}
+      <section className="flex justify-center items-center py-12 bg-black">
+        <div className="w-[117vw] max-w-[1560px] bg-black rounded-2xl p-0 flex flex-col items-center relative">
+          <img 
+            src="/images/StudentStack - HAC.png" 
+            alt="Dashboard" 
+            className="w-full h-auto rounded-2xl shadow-2xl relative z-20"
+            style={{
+              WebkitMaskImage: 'linear-gradient(to right, transparent 0%, white 16%, white 84%, transparent 100%), linear-gradient(to bottom, transparent 0%, white 16%, white 84%, transparent 100%)',
+              WebkitMaskComposite: 'destination-in',
+              WebkitMaskSize: 'cover, cover',
+              maskImage: 'linear-gradient(to right, transparent 0%, white 16%, white 84%, transparent 100%), linear-gradient(to bottom, transparent 0%, white 16%, white 84%, transparent 100%)',
+              maskComposite: 'intersect',
+              maskSize: 'cover, cover'
+            }}
+          />
+        </div>
+      </section>
+
+      {/* UNIFY YOUR FINANCES SECTION */}
+      <section className="w-full bg-white text-black flex items-center justify-center px-8" style={{ minHeight: '100vh', height: '100vh', fontFamily: 'Gabriel Sans, sans-serif' }}>
+        <div ref={unifyRef} className="relative w-full max-w-6xl flex flex-col items-center justify-center h-full">
+          {/* Subtle fade at the edges of the white section */}
+          <div className="pointer-events-none select-none absolute inset-0 z-0" style={{
+            background: 'radial-gradient(ellipse 80% 60% at 50% 50%, rgba(255,255,255,1) 55%, rgba(255,255,255,0) 85%)'
+          }} />
+          {/* Cards scattered around headline, use actual images if available */}
+          {/* Animated Cards */}
+          <motion.div className="absolute left-0 top-0 w-full h-full pointer-events-none select-none">
+            <motion.div style={{ ...getCardStyle(0), position: 'absolute', left: '50%', top: '20%' }} className="-translate-x-1/2 -translate-y-1/2">
+              <img src="/icons/Smart (1).png" alt="Card 1" className="w-56 h-56 object-contain" />
+            </motion.div>
+            <motion.div style={{ ...getCardStyle(1), position: 'absolute', left: '50%', top: '50%' }} className="-translate-x-1/2 -translate-y-1/2">
+              <img src="/icons/Smart (2).png" alt="Card 2" className="w-56 h-56 object-contain" />
+            </motion.div>
+            <motion.div style={{ ...getCardStyle(2), position: 'absolute', left: '50%', bottom: '12%' }} className="-translate-x-1/2 translate-y-1/2">
+              <img src="/icons/Smart (3).png" alt="Card 3" className="w-56 h-56 object-contain" />
+            </motion.div>
+            <motion.div style={{ ...getCardStyle(3), position: 'absolute', right: '50%', bottom: '12%' }} className="translate-x-1/2 translate-y-1/2">
+              <img src="/icons/Smart (4).png" alt="Card 4" className="w-56 h-56 object-contain" />
+            </motion.div>
+            <motion.div style={{ ...getCardStyle(4), position: 'absolute', right: '50%', top: '15%' }} className="translate-x-1/2 -translate-y-1/2">
+              <img src="/icons/Smart.png" alt="Card 5" className="w-56 h-56 object-contain" />
+            </motion.div>
+          </motion.div>
+          <motion.h2
+            className="text-7xl md:text-9xl font-bold leading-tight text-center z-10"
+            style={{ color: '#2563eb', fontSize: `${headlineFontSize.get()}rem` }}
+          >
+            UNIFY Your<br />Finances.
+          </motion.h2>
+        </div>
+      </section>
+
+      {/* GET STARTED FOR FREE SECTION */}
+      <section className="text-center py-24 px-4 bg-black text-white">
+        <h2 className="text-4xl md:text-6xl font-bold mb-6" style={{ fontFamily: 'Gabriel Sans, sans-serif' }}>
+          Get Started For <span className="text-blue-500">Free</span>
+        </h2>
+        <p className="text-lg md:text-xl font-medium mb-10" style={{ fontFamily: 'Gabriel Sans, sans-serif' }}>
+          Be the first to try Sentinel and enjoy the completely free option among powerful AI tools now.
+        </p>
+        <div className="flex justify-center gap-6">
+          <button className="bg-white text-black text-base font-semibold px-8 py-3 rounded border border-blue-500 hover:bg-blue-50 transition" style={{ boxShadow: '0 0 0 2px #2563eb' }}>
+            Get Started
+          </button>
+          <button className="text-white text-base font-semibold px-8 py-3 rounded border border-blue-500 hover:bg-blue-50 hover:text-black transition" style={{ boxShadow: '0 0 0 2px #2563eb' }}>
+            Learn More
           </button>
         </div>
       </section>
 
-      {/* Ocean Image Section */}
-      <section className="px-8 mb-20">
+      {/* ANIMATED LAYERED WAVE (ultra-complex, seamless, glowing, flowing) */}
+      <div className="relative w-full overflow-hidden" style={{ height: '340px', marginBottom: '-2px', background: 'transparent' }}>
+        <style>{`
+          @keyframes waveMove1 {
+            0% { transform: translateX(0) scaleY(1); }
+            100% { transform: translateX(-60%) scaleY(1.08); }
+          }
+          @keyframes waveMove2 {
+            0% { transform: translateX(0) scaleY(1); }
+            100% { transform: translateX(-50%) scaleY(0.98); }
+          }
+          @keyframes waveMove3 {
+            0% { transform: translateX(0) scaleY(1); }
+            100% { transform: translateX(-70%) scaleY(1.04); }
+          }
+          @keyframes waveMove4 {
+            0% { transform: translateX(0) scaleY(1); }
+            100% { transform: translateX(-40%) scaleY(0.96); }
+          }
+          @keyframes waveMove5 {
+            0% { transform: translateX(0) scaleY(1); }
+            100% { transform: translateX(-80%) scaleY(1.12); }
+          }
+        `}</style>
+        {/* Layer 1 - Deep Blue Glow */}
+        <svg className="absolute bottom-0 w-full h-full" style={{ filter: 'blur(12px)', opacity: 0.85 }}>
+          <defs>
+            <linearGradient id="waveGradient1" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#1e3a8a" stopOpacity="0.9"/>
+              <stop offset="50%" stopColor="#3b82f6" stopOpacity="1"/>
+              <stop offset="100%" stopColor="#1e3a8a" stopOpacity="0.9"/>
+            </linearGradient>
+          </defs>
+          <path 
+            d="M0,220 Q200,120 400,220 T800,220 T1200,220 T1600,220 T2000,220 T2400,220 T2800,220 T3200,220 T3600,220 T4000,220 L4000,340 L0,340 Z" 
+            fill="url(#waveGradient1)"
+            style={{ animation: 'waveMove1 10s linear infinite' }}
+          />
+        </svg>
+        {/* Layer 2 - Medium Blue */}
+        <svg className="absolute bottom-0 w-full h-full" style={{ filter: 'blur(10px)', opacity: 0.7 }}>
+          <defs>
+            <linearGradient id="waveGradient2" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.8"/>
+              <stop offset="50%" stopColor="#60a5fa" stopOpacity="0.9"/>
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.8"/>
+            </linearGradient>
+          </defs>
+          <path 
+            d="M0,250 Q300,180 600,250 T1200,250 T1800,250 T2400,250 T3000,250 T3600,250 T4200,250 T4800,250 T5400,250 L5400,340 L0,340 Z" 
+            fill="url(#waveGradient2)"
+            style={{ animation: 'waveMove2 13s linear infinite' }}
+          />
+        </svg>
+        {/* Layer 3 - Light Blue */}
+        <svg className="absolute bottom-0 w-full h-full" style={{ filter: 'blur(8px)', opacity: 0.6 }}>
+          <defs>
+            <linearGradient id="waveGradient3" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.7"/>
+              <stop offset="50%" stopColor="#93c5fd" stopOpacity="0.8"/>
+              <stop offset="100%" stopColor="#60a5fa" stopOpacity="0.7"/>
+            </linearGradient>
+          </defs>
+          <path 
+            d="M0,270 Q400,200 800,270 T1600,270 T2400,270 T3200,270 T4000,270 T4800,270 T5600,270 T6400,270 T7200,270 L7200,340 L0,340 Z" 
+            fill="url(#waveGradient3)"
+            style={{ animation: 'waveMove3 16s linear infinite' }}
+          />
+        </svg>
+        {/* Layer 4 - Very Light Blue */}
+        <svg className="absolute bottom-0 w-full h-full" style={{ filter: 'blur(6px)', opacity: 0.5 }}>
+          <defs>
+            <linearGradient id="waveGradient4" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.6"/>
+              <stop offset="50%" stopColor="#dbeafe" stopOpacity="0.7"/>
+              <stop offset="100%" stopColor="#93c5fd" stopOpacity="0.6"/>
+            </linearGradient>
+          </defs>
+          <path 
+            d="M0,300 Q500,220 1000,300 T2000,300 T3000,300 T4000,300 T5000,300 T6000,300 T7000,300 T8000,300 T9000,300 L9000,340 L0,340 Z" 
+            fill="url(#waveGradient4)"
+            style={{ animation: 'waveMove4 19s linear infinite' }}
+          />
+        </svg>
+        {/* Layer 5 - Accent Blue */}
+        <svg className="absolute bottom-0 w-full h-full" style={{ filter: 'blur(7px)', opacity: 0.4 }}>
+          <defs>
+            <linearGradient id="waveGradient5" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#1e40af" stopOpacity="0.5"/>
+              <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.6"/>
+              <stop offset="100%" stopColor="#1e40af" stopOpacity="0.5"/>
+            </linearGradient>
+          </defs>
+          <path 
+            d="M0,200 Q600,140 1200,200 T2400,200 T3600,200 T4800,200 T6000,200 T7200,200 T8400,200 T9600,200 T10800,200 L10800,340 L0,340 Z" 
+            fill="url(#waveGradient5)"
+            style={{ animation: 'waveMove5 23s linear infinite' }}
+          />
+        </svg>
+      </div>
+
+      {/* FOOTER */}
+      <footer className="bg-black text-white py-16 px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="relative h-96 md:h-[600px] rounded-3xl overflow-hidden bg-gradient-to-b from-blue-300 via-blue-500 to-blue-800 shadow-2xl">
-            <div className="absolute inset-0 bg-gradient-to-t from-blue-900/30 to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-blue-900/50 to-transparent" />
-          </div>
-        </div>
-      </section>
-
-      {/* UNIFY Your Finances Section */}
-      <section className="px-8 mb-20">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-5xl md:text-6xl font-bold mb-8">
-              <span className="text-blue-500">UNIFY</span> Your Finances.
-            </h2>
-          </div>
-
-          {/* Centered Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-center">
-            {/* Netflix Card */}
-            <div className="bg-red-600 text-white rounded-lg border-2 border-red-500 p-6 shadow-lg">
-              <div className="flex items-center justify-between mb-4">
-                <div className="text-3xl font-bold">N</div>
-                <div className="text-right">
-                  <div className="text-lg font-bold">2</div>
-                  <div className="text-sm">DAYS</div>
-                </div>
-              </div>
-              <div className="text-sm font-semibold">Expiring</div>
-              <div className="text-sm">Trial</div>
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-start min-w-0">
+            <div className="whitespace-nowrap">
+              <div className="font-bold text-lg tracking-wide mb-2">SENTINEL</div>
+              <div className="text-gray-400 text-base mb-6">The subscription manager<br />that makes your wallet :)</div>
             </div>
-
-            {/* July Card */}
-            <div className="bg-blue-600 text-white rounded-lg border-2 border-blue-500 p-6 shadow-lg">
-              <div className="flex items-center justify-between mb-4">
-                <div className="text-lg font-bold">JULY</div>
-                <div className="text-2xl">📑</div>
-              </div>
-              <div className="text-2xl font-bold">$342.89</div>
-              <div className="text-sm opacity-80">Secured</div>
+            <div className="whitespace-nowrap">
+              <div className="font-bold text-white mb-2">Overview</div>
+              <div className="text-gray-400 text-base">Product</div>
+              <div className="text-gray-400 text-base">Security</div>
+              <div className="text-gray-400 text-base">Pricing</div>
             </div>
-
-            {/* Activity Card */}
-            <div className="bg-orange-600 text-white rounded-lg border-2 border-orange-500 p-6 shadow-lg">
-              <div className="text-sm font-bold mb-2">ACTIVITY</div>
-              <div className="text-xs opacity-80 mb-2">Charges Blocked</div>
-              <div className="text-2xl font-bold">$349.09</div>
-              <div className="flex items-center space-x-2 mt-4">
-                <div className="w-8 h-8 bg-green-500 rounded border-2 border-green-400 flex items-center justify-center">
-                  <span className="text-xs font-bold">H</span>
-                </div>
-                <div className="w-8 h-8 bg-blue-500 rounded border-2 border-blue-400 flex items-center justify-center">
-                  <span className="text-xs font-bold">A</span>
-                </div>
-                <div className="w-8 h-8 bg-purple-500 rounded border-2 border-purple-400 flex items-center justify-center">
-                  <span className="text-xs font-bold">R</span>
-                </div>
-              </div>
+            <div className="whitespace-nowrap">
+              <div className="font-bold text-white mb-2">Company</div>
+              <div className="text-gray-400 text-base">About</div>
+              <div className="text-gray-400 text-base">Careers</div>
+              <div className="text-gray-400 text-base">Press</div>
             </div>
-
-            {/* Spotify Card */}
-            <div className="bg-green-600 text-white rounded-lg border-2 border-green-500 p-6 shadow-lg">
-              <div className="flex items-center mb-4">
-                <div className="text-2xl">🎵</div>
-              </div>
-              <div className="text-2xl font-bold">$9.99</div>
-              <div className="text-sm font-semibold mt-2">Cancel</div>
-              <div className="text-sm">You Save: $109.89</div>
+            <div className="whitespace-nowrap">
+              <div className="font-bold text-white mb-2">Legal</div>
+              <div className="text-gray-400 text-base">Terms of Use</div>
+              <div className="text-gray-400 text-base">Privacy</div>
+              <div className="text-gray-400 text-base">Security</div>
             </div>
-
-            {/* Expiring Notification */}
-            <div className="bg-yellow-600 text-white rounded-lg border-2 border-yellow-500 p-6 shadow-lg">
-              <div className="text-sm font-bold mb-2">⚠️ Expiring...</div>
-              <div className="flex space-x-2">
-                <div className="w-8 h-8 bg-green-500 rounded border-2 border-green-400"></div>
-                <div className="w-8 h-8 bg-blue-500 rounded border-2 border-blue-400"></div>
-                <div className="w-8 h-8 bg-purple-500 rounded border-2 border-purple-400"></div>
-              </div>
+            <div className="whitespace-nowrap">
+              <div className="font-bold text-white mb-2">Contact</div>
+              <div className="text-gray-400 text-base">Email</div>
+              <div className="text-gray-400 text-base">Instagram</div>
+              <div className="text-gray-400 text-base">Tiktok</div>
             </div>
           </div>
         </div>
-      </section>
-
-      {/* Dashboard Section */}
-      <section className="bg-slate-900 py-20 px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
-            
-            {/* Subscriptions Cancelled */}
-            <div className="card-rectangular">
-              <h3 className="text-sm font-bold text-blue-400 mb-4 tracking-wide">
-                SUBSCRIPTIONS CANCELLED
-              </h3>
-              <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
-                  <div className="w-8 h-8 bg-blue-400 rounded-full"></div>
-                </div>
-                <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
-                  <div className="w-6 h-6 bg-blue-400 rounded-full"></div>
-                </div>
-              </div>
-            </div>
-
-            {/* Reading Instructions */}
-            <div className="card-rectangular">
-              <h3 className="text-sm font-bold text-blue-400 mb-4 tracking-wide">
-                READING INSTRUCTIONS
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-start space-x-3">
-                  <span className="text-white font-bold text-lg">1.</span>
-                  <span className="text-xs text-gray-300">
-                    USE GET PLAN TO GET THE CUSTOMER DETAILS
-                  </span>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <span className="text-white font-bold text-lg">2.</span>
-                  <span className="text-xs text-gray-300">
-                    CONFIRM PRICING
-                  </span>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <span className="text-white font-bold text-lg">3.</span>
-                  <span className="text-xs text-gray-300">
-                    CONFIRM MONTHLY / ANNUAL BILL TO PROCEED
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Finances */}
-            <div className="card-rectangular">
-              <h3 className="text-sm font-bold text-blue-400 mb-4 tracking-wide">
-                FINANCES
-              </h3>
-              <div className="space-y-4">
-                <div className="flex items-end space-x-1 h-20">
-                  {[...Array(12)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="bg-blue-500 flex-1 rounded-sm"
-                      style={{
-                        height: `${Math.random() * 80 + 20}%`
-                      }}
-                    ></div>
-                  ))}
-                </div>
-                <div className="text-xs text-gray-400">
-                  Monthly spending analysis
-                </div>
-              </div>
-            </div>
-
-            {/* Performance */}
-            <div className="card-rectangular">
-              <h3 className="text-sm font-bold text-blue-400 mb-4 tracking-wide">
-                PERFORMANCE
-              </h3>
-              <div className="relative h-20">
-                <svg className="w-full h-full">
-                  <polyline
-                    points="0,60 20,45 40,30 60,25 80,35 100,20"
-                    stroke="#3b82f6"
-                    strokeWidth="3"
-                    fill="none"
-                  />
-                </svg>
-              </div>
-            </div>
-
-            {/* Total Saved */}
-            <div className="card-rectangular">
-              <h3 className="text-sm font-bold text-blue-400 mb-4 tracking-wide">
-                TOTAL SAVED
-              </h3>
-              <div className="text-3xl font-bold text-green-400">
-                $1,247.50
-              </div>
-            </div>
-
-            {/* Active Subscriptions */}
-            <div className="card-rectangular">
-              <h3 className="text-sm font-bold text-blue-400 mb-4 tracking-wide">
-                ACTIVE SUBSCRIPTIONS
-              </h3>
-              <div className="space-y-2">
-                <div className="text-xs text-gray-300">• Netflix - $24.99/month</div>
-                <div className="text-xs text-gray-300">• Spotify - $9.99/month</div>
-                <div className="text-xs text-gray-300">• Adobe - $52.99/month</div>
-              </div>
-            </div>
-
-            {/* Trial Alerts */}
-            <div className="card-rectangular">
-              <h3 className="text-sm font-bold text-blue-400 mb-4 tracking-wide">
-                TRIAL ALERTS
-              </h3>
-              <div className="space-y-2">
-                <div className="text-xs text-red-400">• Hulu expires in 2 days</div>
-                <div className="text-xs text-yellow-400">• Disney+ expires in 5 days</div>
-              </div>
-            </div>
-
-            {/* Monthly Savings */}
-            <div className="card-rectangular">
-              <h3 className="text-sm font-bold text-blue-400 mb-4 tracking-wide">
-                MONTHLY SAVINGS
-              </h3>
-              <div className="text-2xl font-bold text-green-400">$127.50</div>
-            </div>
-
-          </div>
-        </div>
-      </section>
+      </footer>
     </div>
   );
 } 
