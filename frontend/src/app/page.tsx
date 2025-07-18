@@ -51,10 +51,14 @@ export default function HomePage() {
 
   // Interpolate X and Y for each card
   const getCardStyle = (i: number) => {
-    const safeInit = (cardInitial && Array.isArray(cardInitial[i]) && typeof cardInitial[i][0] === 'number' && typeof cardInitial[i][1] === 'number') ? cardInitial[i] : [0, 0];
-    const safeFin = (cardFinal && Array.isArray(cardFinal[i]) && typeof cardFinal[i][0] === 'number' && typeof cardFinal[i][1] === 'number') ? cardFinal[i] : [0, 0];
-    const x = safeInit[0] + (safeFin[0] - safeInit[0]) * progress;
-    const y = safeInit[1] + (safeFin[1] - safeInit[1]) * progress;
+    const [initXRaw, initYRaw] = Array.isArray(cardInitial[i]) ? cardInitial[i] : [0, 0];
+    const [finXRaw, finYRaw] = Array.isArray(cardFinal[i]) ? cardFinal[i] : [0, 0];
+    const initX = typeof initXRaw === 'number' ? initXRaw : 0;
+    const initY = typeof initYRaw === 'number' ? initYRaw : 0;
+    const finX = typeof finXRaw === 'number' ? finXRaw : 0;
+    const finY = typeof finYRaw === 'number' ? finYRaw : 0;
+    const x = initX + (finX - initX) * progress;
+    const y = initY + (finY - initY) * progress;
     return {
       x: `${x}vw`,
       y: `${y}vh`,
