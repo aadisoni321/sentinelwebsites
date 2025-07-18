@@ -400,7 +400,7 @@ export default function PricingPage() {
 } 
 
 // FAQItem component
-function FAQItem({ question, answer }) {
+function FAQItem({ question, answer }: { question: string; answer: string }) {
   const [open, setOpen] = React.useState(false);
   return (
     <div className="bg-gray-900 text-white rounded-2xl p-8 hover:bg-gray-800 transition cursor-pointer" onClick={() => setOpen(o => !o)}>
