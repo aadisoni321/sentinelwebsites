@@ -49,7 +49,6 @@ export default function HomePage() {
   // All cards stack at (0,0) in the center
   const cardFinal = [ [0,0], [0,0], [0,0], [0,0], [0,0] ];
 
-  const CARD_COUNT = 5;
   // Interpolate X and Y for each card
   const getCardStyle = (i: number) => {
     const safeInit = (cardInitial && Array.isArray(cardInitial[i]) && typeof cardInitial[i][0] === 'number' && typeof cardInitial[i][1] === 'number') ? cardInitial[i] : [0, 0];
